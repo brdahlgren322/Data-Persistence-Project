@@ -3,74 +3,108 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
+public enum MyGameScenes { Menu = 0, Game = 1}
 public class MainManager : MonoBehaviour
 {
-    public Brick BrickPrefab;
-    public int LineCount = 6;
-    public Rigidbody Ball;
+    public static MainManager Instance;
 
-    public Text ScoreText;
-    public GameObject GameOverText;
-    
-    private bool m_Started = false;
-    private int m_Points;
-    
-    private bool m_GameOver = false;
+    public string currentPlayerName;
+    public string highScorePlayerName;
+    public int highScore;
+    public int currentScore;
+    public bool isAlive;
 
-    
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
-        const float step = 0.6f;
-        int perLine = Mathf.FloorToInt(4.0f / step);
+        if (Instance != null)
+        {
+            Destroy(Instance);
+            return;
+        }
+        Instance = this;
+        isAlive = true;
+        DontDestroyOnLoad(gameObject);
+        LoadCurrentPlayer();
+        LoadHighScore();
+    }
+
+    [System.Serializable]
+    public class CurrentPlayerData
+    {
+        public string currentPlayerName;
+        public int currentScore;
+    }
+
+    [System.Serializable]
+    public class HighScoreData
+    {
+        public string highScorePlayerName;
+        public int highScore;
+    }
+
+    public void ExitGame()
+    {
+        SaveCurrentPlayer();
+        SaveHighScore();
+        isAlive = false;
+    }
+
+    public void SaveCurrentPlayer()
+    {
+        CurrentPlayerData data = new CurrentPlayerData();
+        data.currentPlayerName = currentPlayerName;
+        data.currentScore = currentScore;
         
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
-        for (int i = 0; i < LineCount; ++i)
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/cp_savefile.json", json );
+    }
+
+    public void SaveHighScore()
+    {
+        SaveHighScore(highScorePlayerName, highScore);
+    }
+    public void SaveHighScore(string name, int score)
+    {
+        if(name != highScorePlayerName || score != highScore)
         {
-            for (int x = 0; x < perLine; ++x)
-            {
-                Vector3 position = new Vector3(-1.5f + step * x, 2.5f + i * 0.3f, 0);
-                var brick = Instantiate(BrickPrefab, position, Quaternion.identity);
-                brick.PointValue = pointCountArray[i];
-                brick.onDestroyed.AddListener(AddPoint);
-            }
+            highScorePlayerName = name;
+            highScore = score;
+        }
+        HighScoreData data = new HighScoreData();
+        data.highScorePlayerName = highScorePlayerName;
+        data.highScore = highScore;
+
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/hs_savefile.json", json);
+    }
+
+    public void LoadCurrentPlayer()
+    {
+        string path = Application.persistentDataPath + "/cp_savefile.json";
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            CurrentPlayerData data = JsonUtility.FromJson<CurrentPlayerData>(json);
+
+            currentPlayerName = data.currentPlayerName;
+            currentScore = data.currentScore;
         }
     }
 
-    private void Update()
+    public void LoadHighScore()
     {
-        if (!m_Started)
+        string path = Application.persistentDataPath + "/hs_savefile.json";
+        if (File.Exists(path))
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                m_Started = true;
-                float randomDirection = Random.Range(-1.0f, 1.0f);
-                Vector3 forceDir = new Vector3(randomDirection, 1, 0);
-                forceDir.Normalize();
+            string json = File.ReadAllText(path);
+            HighScoreData data = JsonUtility.FromJson<HighScoreData>(json);
 
-                Ball.transform.SetParent(null);
-                Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
-            }
+            highScorePlayerName = data.highScorePlayerName;
+            highScore = data.highScore;
         }
-        else if (m_GameOver)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
-        }
-    }
-
-    void AddPoint(int point)
-    {
-        m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
-    }
-
-    public void GameOver()
-    {
-        m_GameOver = true;
-        GameOverText.SetActive(true);
     }
 }
