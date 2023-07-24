@@ -65,7 +65,6 @@ public class MainManager : MonoBehaviour
         string json = JsonUtility.ToJson(data);
 
         File.WriteAllText(Application.persistentDataPath + "/cp_savefile.json", json );
-        Debug.Log("Saved Current Player Data");
     }
 
     public void SaveHighScore()
@@ -86,7 +85,6 @@ public class MainManager : MonoBehaviour
         string json = JsonUtility.ToJson(data);
 
         File.WriteAllText(Application.persistentDataPath + "/hs_savefile.json", json);
-        Debug.Log("Saved HighScore Player Data");
     }
 
     public void LoadCurrentPlayer()
