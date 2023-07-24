@@ -87,6 +87,8 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
+        MainManager.Instance.SaveCurrentPlayer(MainManager.Instance.currentPlayerName, m_Points);
+        MainManager.Instance.LoadCurrentPlayer();
         if(m_Points > MainManager.Instance.highScore)
         {
             MainManager.Instance.SaveHighScore(MainManager.Instance.currentPlayerName, m_Points);

@@ -16,6 +16,8 @@ public class MenuUIHandler : MonoBehaviour
     public TextMeshProUGUI inputNameTitleText;
     public TextMeshProUGUI inputNamePlaceholderText;
     public TextMeshProUGUI inputNameText;
+    public TextMeshProUGUI warningText;
+    public TMP_InputField inputField;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,16 +28,20 @@ public class MenuUIHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (warningText.gameObject.activeInHierarchy)
+        {
+            if(!string.IsNullOrEmpty(inputNameText.text) && inputNameText.text.Trim().Length > 1) 
+            {
+                warningText.gameObject.SetActive(false);
+            }
+        }
     }
 
     private void GetHighScore()
     {
-        MainManager.Instance.LoadHighScore();
-        bool nameCheck = !string.IsNullOrEmpty(MainManager.Instance.highScorePlayerName);
         if (!string.IsNullOrEmpty(MainManager.Instance.highScorePlayerName)) 
         {
-            highScoreText.SetText("High Score: " +  MainManager.Instance.highScorePlayerName + "-- " + MainManager.Instance.highScore);
+            highScoreText.SetText("High Score: " +  MainManager.Instance.highScorePlayerName + " - " + MainManager.Instance.highScore);
         }
         else
         {
@@ -51,10 +57,12 @@ public class MenuUIHandler : MonoBehaviour
         {
             lastScoreText.GetComponentInParent<RectTransform>().sizeDelta = new Vector2(lastScoreText.GetComponentInParent<RectTransform>().rect.width, 100);
             lastScoreText.gameObject.SetActive(true);
-            lastScoreText.SetText(MainManager.Instance.currentPlayerName + "'s Score: " + "-- " + MainManager.Instance.currentScore);
+            lastScoreText.SetText(MainManager.Instance.currentPlayerName + "'s Last Score: " + MainManager.Instance.currentScore);
 
-            inputNameTitleText.SetText("Still You???");
-            inputNameText.SetText(MainManager.Instance.currentPlayerName);
+            inputNameTitleText.SetText("Still You?");
+            //inputNamePlaceholderText.gameObject.SetActive(false);
+            inputField.placeholder.gameObject.SetActive(false);
+            inputField.text = MainManager.Instance.currentPlayerName;
         }
         else
         {
@@ -71,7 +79,19 @@ public class MenuUIHandler : MonoBehaviour
 
     public void StartNew()
     {
-        SceneManager.LoadScene((int)MyGameScenes.Game);
+        string inputName = inputNameText.text;
+        bool hasName = string.IsNullOrEmpty(inputName);
+        bool hasName2 = string.IsNullOrWhiteSpace(inputName);
+        int hasName3 = inputName.Trim().Length;
+        if (String.IsNullOrEmpty(inputName) || inputName.Trim().Length <= 1)
+        {
+            warningText.gameObject.SetActive(true);
+        }
+        else
+        {
+            MainManager.Instance.currentPlayerName = inputName;
+            SceneManager.LoadScene((int)MyGameScenes.Game);
+        }
     }
 
     public void Exit()
